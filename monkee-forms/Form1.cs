@@ -56,15 +56,16 @@ namespace monkee_forms
         }
 
 
+        // the inputbox is not on screen, and is therefore not clickable, so focus should be manual. 
         // maybe i'll wanna do it some other way? dunno yet
         // if i'm doing it like this, i'll need to add any other elements as well
-        // the inputbox is not on screen, and is therefore not clickable, so focus should be manual
         private void HandleEvents()
         {
             this.Click += (_, __) => _inputBox.Focus();
             this.Shown += (_, __) => _inputBox.Focus();
             rootPanel.Click += (_, __) => _inputBox.Focus();
             mainPanel.Click += (_, __) => _inputBox.Focus();
+            _referenceBox.Click += (_, __) => _inputBox.Focus();
 
             _inputBox.KeyPress += InputBox_KeyPress;
             _inputBox.KeyDown += InputBox_KeyDown;
@@ -78,7 +79,7 @@ namespace monkee_forms
         {
             if (char.IsControl(e.KeyChar))
             {
-                // we Will be handling this in the KeyDown
+                // we WILL be handling this in the KeyDown
                 e.Handled = true;
                 return;
             }
@@ -110,7 +111,24 @@ namespace monkee_forms
 
         private void InputBox_KeyDown(object sender, KeyEventArgs e)
         {
+            // add ctrl + backspace support? like a normal person?
+            if (e.KeyCode == Keys.Back)
+            {
+                if (_index > 0)
+                {
+                    HighlightClear();
+                    _index--;
 
+                    _referenceBox.Select(_index, 1);
+                    _referenceBox.SelectionColor = Color.Black;
+                    _referenceBox.SelectionBackColor = mainPanel.BackColor;
+                    _referenceBox.DeselectAll();
+
+                    HighlightChar();
+                }
+            }
+
+            e.Handled = true; 
         }
 
         // called when clicking on the button
