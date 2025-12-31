@@ -21,8 +21,7 @@ namespace monkee_forms
 
             var httpClient = new HttpClient();
             var apiClient = new TypeRacerApi(httpClient);
-
-
+ 
             Application.Run(new Form1(apiClient));
         }
     }

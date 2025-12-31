@@ -13,6 +13,15 @@ namespace monkee_forms
 {
     public partial class Form1 : Form
     { 
+        // TODO:
+        // - handle index out of range --> i think i did it? need to doublecheck
+        // - get some texts and/or ids in cache 
+        // - sqlite everyting (scores + timestamp + wpm, users + total races + avg wpm, texts + ids) and connect everything
+        // - add ui and logic for wpm
+        // - username input
+        // - add accuracy and logic for it
+
+
         private readonly TypeRacerApi _api;
 
         // ELEMENTS
@@ -74,9 +83,13 @@ namespace monkee_forms
             //button1.Click += (_, __) => _inputBox.Focus();
         }
 
-        // TODO: handle index out of range
         private void InputBox_KeyPress(object sender, KeyPressEventArgs e)
         {
+            if (_index >= _referenceText.Length)
+            {
+                e.Handled = true;
+                return;
+            }
             if (char.IsControl(e.KeyChar))
             {
                 // we WILL be handling this in the KeyDown
@@ -87,14 +100,22 @@ namespace monkee_forms
             HighlightClear();
 
             _referenceBox.Select(_index, 1);
-            _referenceBox.SelectionColor = (e.KeyChar == _referenceText[_index]) ? Color.Green : Color.Red;
+            _referenceBox.SelectionColor = (e.KeyChar == _referenceText[_index]) ? Color.Green : Color.DarkRed;
+            _referenceBox.SelectionBackColor = (e.KeyChar == _referenceText[_index]) ? mainPanel.BackColor : Color.PaleVioletRed;
             _referenceBox.DeselectAll();
 
             _index++;
-            HighlightChar();
             e.Handled = true; 
-        }
 
+            if (_index == _referenceText.Length)
+            {
+                _inputBox.Enabled = false;
+                // some other logic here when the user is done with the text
+                return;
+            }
+
+            HighlightChar();
+        }
         private void HighlightChar()
         {
             _referenceBox.Select(_index, 1);
@@ -140,6 +161,7 @@ namespace monkee_forms
             _referenceBox.Text = _referenceText;
             _index = 0;
             HighlightChar();
+            _inputBox.Enabled = true;
             _inputBox.Focus();
         }
     }
