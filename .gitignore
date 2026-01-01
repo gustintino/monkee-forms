@@ -417,3 +417,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 monkee-forms/appsettings.json
+monkee-forms-v2/appsettings.json
