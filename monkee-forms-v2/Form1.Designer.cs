@@ -28,59 +28,98 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.rootPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.button1 = new System.Windows.Forms.Button();
-            this.mainPanel = new System.Windows.Forms.Panel();
-            this.rootPanel.SuspendLayout();
-            this.SuspendLayout();
+            rootPanel = new TableLayoutPanel();
+            button1 = new Button();
+            mainPanel = new Panel();
+            flowLayoutPanel1 = new FlowLayoutPanel();
+            panel1 = new Panel();
+            userSelect = new ComboBox();
+            rootPanel.SuspendLayout();
+            panel1.SuspendLayout();
+            SuspendLayout();
             // 
             // rootPanel
             // 
-            this.rootPanel.AutoSize = true;
-            this.rootPanel.ColumnCount = 2;
-            this.rootPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.rootPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 200F));
-            this.rootPanel.Controls.Add(this.button1, 1, 1);
-            this.rootPanel.Controls.Add(this.mainPanel, 0, 0);
-            this.rootPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rootPanel.Location = new System.Drawing.Point(0, 0);
-            this.rootPanel.Name = "rootPanel";
-            this.rootPanel.RowCount = 2;
-            this.rootPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.rootPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 60F));
-            this.rootPanel.Size = new System.Drawing.Size(945, 518);
-            this.rootPanel.TabIndex = 1;
+            rootPanel.AutoSize = true;
+            rootPanel.ColumnCount = 2;
+            rootPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            rootPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 233F));
+            rootPanel.Controls.Add(button1, 1, 1);
+            rootPanel.Controls.Add(mainPanel, 0, 0);
+            rootPanel.Controls.Add(flowLayoutPanel1, 0, 1);
+            rootPanel.Controls.Add(panel1, 1, 0);
+            rootPanel.Dock = DockStyle.Fill;
+            rootPanel.Location = new Point(0, 0);
+            rootPanel.Margin = new Padding(4, 3, 4, 3);
+            rootPanel.Name = "rootPanel";
+            rootPanel.RowCount = 2;
+            rootPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            rootPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 69F));
+            rootPanel.Size = new Size(1102, 598);
+            rootPanel.TabIndex = 1;
             // 
             // button1
             // 
-            this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button1.Location = new System.Drawing.Point(748, 461);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(194, 54);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Generate New Text";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.StartNewRound);
+            button1.Dock = DockStyle.Fill;
+            button1.Location = new Point(873, 532);
+            button1.Margin = new Padding(4, 3, 4, 3);
+            button1.Name = "button1";
+            button1.Size = new Size(225, 63);
+            button1.TabIndex = 1;
+            button1.Text = "Generate New Text";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += StartNewRound;
             // 
             // mainPanel
             // 
-            this.mainPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainPanel.Location = new System.Drawing.Point(3, 3);
-            this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(739, 452);
-            this.mainPanel.TabIndex = 2;
+            mainPanel.Dock = DockStyle.Fill;
+            mainPanel.Location = new Point(4, 3);
+            mainPanel.Margin = new Padding(4, 3, 4, 3);
+            mainPanel.Name = "mainPanel";
+            mainPanel.Size = new Size(861, 523);
+            mainPanel.TabIndex = 2;
+            // 
+            // flowLayoutPanel1
+            // 
+            flowLayoutPanel1.Dock = DockStyle.Fill;
+            flowLayoutPanel1.Location = new Point(3, 532);
+            flowLayoutPanel1.Name = "flowLayoutPanel1";
+            flowLayoutPanel1.Size = new Size(863, 63);
+            flowLayoutPanel1.TabIndex = 3;
+            // 
+            // panel1
+            // 
+            panel1.Controls.Add(userSelect);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(872, 3);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(227, 523);
+            panel1.TabIndex = 4;
+            // 
+            // userSelect
+            // 
+            userSelect.AllowDrop = true;
+            userSelect.Dock = DockStyle.Top;
+            userSelect.FormattingEnabled = true;
+            userSelect.Location = new Point(0, 0);
+            userSelect.Name = "userSelect";
+            userSelect.Size = new Size(227, 23);
+            userSelect.TabIndex = 1;
+            userSelect.SelectedIndexChanged += userSelect_SelectedIndexChanged;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(945, 518);
-            this.Controls.Add(this.rootPanel);
-            this.Name = "Form1";
-            this.Text = "test";
-            this.rootPanel.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1102, 598);
+            Controls.Add(rootPanel);
+            Margin = new Padding(4, 3, 4, 3);
+            Name = "Form1";
+            Text = "test";
+            rootPanel.ResumeLayout(false);
+            panel1.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 
@@ -88,6 +127,9 @@
         private System.Windows.Forms.TableLayoutPanel rootPanel;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Panel mainPanel;
+        private FlowLayoutPanel flowLayoutPanel1;
+        private Panel panel1;
+        private ComboBox userSelect;
     }
 }
 

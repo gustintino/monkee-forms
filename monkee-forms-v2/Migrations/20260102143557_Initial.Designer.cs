@@ -11,8 +11,8 @@ using monkee_forms_v2.Data;
 namespace monkee_forms_v2.Migrations
 {
     [DbContext(typeof(MonkeeFormsDbContext))]
-    [Migration("20260101184818_RenameWpm")]
-    partial class RenameWpm
+    [Migration("20260102143557_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,11 +32,7 @@ namespace monkee_forms_v2.Migrations
                     b.Property<DateTime>("CompletedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TextDataID")
+                    b.Property<int>("TextID")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("UserID")

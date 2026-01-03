@@ -1,4 +1,6 @@
-﻿using monkee_forms_v2.Models;
+﻿using monkee_forms_v2.Api.TypeRacerApi;
+using monkee_forms_v2.Data;
+using monkee_forms_v2.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,7 +15,7 @@ using System.Windows.Forms;
 namespace monkee_forms_v2
 {
     public partial class Form1 : Form
-    { 
+    {
         // TODO:
         // - handle index out of range --> i think i did it? need to doublecheck
         // - get some texts and/or ids in cache 
@@ -22,13 +24,17 @@ namespace monkee_forms_v2
         // - username input
         // - add accuracy and logic for it
 
-
         private readonly TypeRacerApi _api;
 
         // ELEMENTS
-        private RichTextBox _referenceBox; 
+        private RichTextBox _referenceBox;
         private TextBox _inputBox; // for actually capturing the input from user 
 
+        private bool _startedTyping = false;
+        private DateTime _startTime;
+        private DateTime _endTime;
+        private int _correctCharsTyped;
+        private int _wrongCharsTyped;
         private int _index = 0;
         private string _referenceText = "";
 
@@ -42,7 +48,7 @@ namespace monkee_forms_v2
         }
 
         private void InitialSetup()
-        { 
+        {
             _referenceBox = new RichTextBox();
             mainPanel.Controls.Add(_referenceBox);
 
@@ -61,6 +67,7 @@ namespace monkee_forms_v2
             _inputBox.Size = new Size(1, 1);
             _inputBox.Location = new Point(-200, -200);
 
+            userSelect.Items.Add("Create new user...");
 
 
         }
@@ -79,9 +86,6 @@ namespace monkee_forms_v2
 
             _inputBox.KeyPress += InputBox_KeyPress;
             _inputBox.KeyDown += InputBox_KeyDown;
-
-            // is this even needed?
-            //button1.Click += (_, __) => _inputBox.Focus();
         }
 
         private void InputBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -98,20 +102,35 @@ namespace monkee_forms_v2
                 return;
             }
 
+            if (!_startedTyping)
+            {
+                _startedTyping = true;
+                _startTime = DateTime.Now;
+            }
+
             HighlightClear();
 
             _referenceBox.Select(_index, 1);
-            _referenceBox.SelectionColor = (e.KeyChar == _referenceText[_index]) ? Color.Green : Color.DarkRed;
-            _referenceBox.SelectionBackColor = (e.KeyChar == _referenceText[_index]) ? mainPanel.BackColor : Color.PaleVioletRed;
+            if (e.KeyChar == _referenceText[_index])
+            {
+                _referenceBox.SelectionColor = Color.Green;
+                _referenceBox.SelectionBackColor = mainPanel.BackColor;
+                _correctCharsTyped++;
+            }
+            else
+            {
+                _referenceBox.SelectionColor = Color.Red;
+                _referenceBox.SelectionBackColor = Color.PaleVioletRed;
+                _wrongCharsTyped++;
+            }
             _referenceBox.DeselectAll();
 
             _index++;
-            e.Handled = true; 
+            e.Handled = true;
 
             if (_index == _referenceText.Length)
             {
-                _inputBox.Enabled = false;
-                // some other logic here when the user is done with the text
+                EndRound();
                 return;
             }
 
@@ -120,15 +139,15 @@ namespace monkee_forms_v2
         private void HighlightChar()
         {
             _referenceBox.Select(_index, 1);
-            _referenceBox.SelectionBackColor = Color.LightGray;
-            _referenceBox.DeselectAll(); 
+            _referenceBox.SelectionBackColor = Color.SlateGray;
+            _referenceBox.DeselectAll();
         }
 
         private void HighlightClear()
         {
             _referenceBox.Select(_index, 1);
             _referenceBox.SelectionBackColor = mainPanel.BackColor;
-            _referenceBox.DeselectAll(); 
+            _referenceBox.DeselectAll();
         }
 
         private void InputBox_KeyDown(object sender, KeyEventArgs e)
@@ -142,6 +161,7 @@ namespace monkee_forms_v2
                     _index--;
 
                     _referenceBox.Select(_index, 1);
+
                     _referenceBox.SelectionColor = Color.Black;
                     _referenceBox.SelectionBackColor = mainPanel.BackColor;
                     _referenceBox.DeselectAll();
@@ -150,7 +170,7 @@ namespace monkee_forms_v2
                 }
             }
 
-            e.Handled = true; 
+            e.Handled = true;
         }
 
         // called when clicking on the button
@@ -161,9 +181,74 @@ namespace monkee_forms_v2
 
             _referenceBox.Text = _referenceText;
             _index = 0;
+            _correctCharsTyped = 0;
+            _wrongCharsTyped = 0;
             HighlightChar();
             _inputBox.Enabled = true;
             _inputBox.Focus();
+        }
+
+        private void EndRound()
+        {
+            _inputBox.Enabled = false;
+            _endTime = DateTime.Now;
+
+            float acc = ((float)_correctCharsTyped / (_correctCharsTyped + _wrongCharsTyped));
+            var length = _endTime - _startTime;
+            var rawWpm = _referenceText.Length / length.TotalMinutes / 5;
+            var wpm = rawWpm * acc;
+
+
+
+            //using var db = MonkeeFormsDbContext.Create();
+            var run = new Run
+            {
+                Accuracy = acc * 100,
+                Wpm = Convert.ToInt32(wpm),
+                CompletedAt = _startTime,
+            };
+
+        }
+
+        private async void userSelect_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(userSelect.SelectedItem?.ToString() == "Create new user...")
+            {
+                using var modal = new CreateNewUserForm();
+                if(modal.ShowDialog() == DialogResult.OK)
+                {
+                    var newItem = modal.NewName;
+                    userSelect.Items.Insert(0, newItem);
+                    userSelect.SelectedItem = newItem;
+
+                    var newUser = new User
+                    {
+                        Name = newItem,
+                        CreatedAt = DateTime.Now
+                    };
+                    await AddUser(newUser);
+                }
+            }
+        }
+        private async Task AddUser(User newUser)
+        {
+            using var db = MonkeeFormsDbContext.Create();
+            db.Add<User>(newUser);
+            await db.SaveChangesAsync();
+        }
+
+        private async void AddRun(Run newRun)
+        {
+            using var db = MonkeeFormsDbContext.Create();
+            db.Add<Run>(newRun);
+            await db.SaveChangesAsync();
+        }
+
+        private async void AddText(Text newText)
+        {
+            using var db = MonkeeFormsDbContext.Create();
+            db.Add<Text>(newText);
+            await db.SaveChangesAsync();
         }
     }
 }

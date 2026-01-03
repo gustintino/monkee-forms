@@ -11,7 +11,9 @@ namespace monkee_forms_v2.Data
 {
     public class MonkeeFormsDbContext : DbContext 
     {
-        public DbSet<Run> Runs => Set<Run>(); 
+        public DbSet<Run> Runs => Set<Run>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<Text> Texts => Set<Text>();
 
         // once again i hate this
         private readonly string _dbPath = "monkeeforms.db";
@@ -20,8 +22,7 @@ namespace monkee_forms_v2.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var path = Path.Combine(AppContext.BaseDirectory, _dbPath);
-            optionsBuilder.UseSqlite($"Data Source={path}");
-        }
+            optionsBuilder.UseSqlite($"Data Source={_dbPath}");
+        } 
     }
 }

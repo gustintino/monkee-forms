@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using monkee_forms_v2.Data;
 
@@ -10,9 +11,11 @@ using monkee_forms_v2.Data;
 namespace monkee_forms_v2.Migrations
 {
     [DbContext(typeof(MonkeeFormsDbContext))]
-    partial class MonkeeFormsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260102151036_ForgotName")]
+    partial class ForgotName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -82,9 +85,6 @@ namespace monkee_forms_v2.Migrations
 
                     b.Property<int>("CompletedRuns")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()

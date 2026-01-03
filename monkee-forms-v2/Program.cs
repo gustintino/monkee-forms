@@ -1,3 +1,4 @@
+using monkee_forms_v2.Api.TypeRacerApi;
 using monkee_forms_v2.Data;
 
 namespace monkee_forms_v2
@@ -10,8 +11,6 @@ namespace monkee_forms_v2
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
             var httpClient = new HttpClient();

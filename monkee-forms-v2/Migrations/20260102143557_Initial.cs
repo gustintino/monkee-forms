@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace monkee_forms_v2.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,9 +19,8 @@ namespace monkee_forms_v2.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     UserID = table.Column<int>(type: "INTEGER", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    TextDataID = table.Column<int>(type: "INTEGER", nullable: false),
-                    Text = table.Column<string>(type: "TEXT", nullable: false),
-                    Wpm = table.Column<float>(type: "REAL", nullable: false),
+                    TextID = table.Column<int>(type: "INTEGER", nullable: false),
+                    Wpm = table.Column<int>(type: "INTEGER", nullable: false),
                     Accuracy = table.Column<float>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
