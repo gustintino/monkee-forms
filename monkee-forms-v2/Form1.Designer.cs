@@ -33,6 +33,7 @@
             mainPanel = new Panel();
             flowLayoutPanel1 = new FlowLayoutPanel();
             panel1 = new Panel();
+            textIdInput = new TextBox();
             userSelect = new ComboBox();
             rootPanel.SuspendLayout();
             panel1.SuspendLayout();
@@ -89,12 +90,22 @@
             // 
             // panel1
             // 
+            panel1.Controls.Add(textIdInput);
             panel1.Controls.Add(userSelect);
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(872, 3);
             panel1.Name = "panel1";
             panel1.Size = new Size(227, 523);
             panel1.TabIndex = 4;
+            // 
+            // textIdInput
+            // 
+            textIdInput.ForeColor = SystemColors.ControlText;
+            textIdInput.Location = new Point(3, 497);
+            textIdInput.Name = "textIdInput";
+            textIdInput.PlaceholderText = "Enter custom text ID here...";
+            textIdInput.Size = new Size(221, 23);
+            textIdInput.TabIndex = 3;
             // 
             // userSelect
             // 
@@ -118,6 +129,7 @@
             Text = "test";
             rootPanel.ResumeLayout(false);
             panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
 
@@ -130,6 +142,7 @@
         private FlowLayoutPanel flowLayoutPanel1;
         private Panel panel1;
         private ComboBox userSelect;
+        private TextBox textIdInput;
     }
 }
 

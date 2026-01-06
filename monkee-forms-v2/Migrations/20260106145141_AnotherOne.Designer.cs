@@ -11,8 +11,8 @@ using monkee_forms_v2.Data;
 namespace monkee_forms_v2.Migrations
 {
     [DbContext(typeof(MonkeeFormsDbContext))]
-    [Migration("20260103122956_AddedCreatedAtField")]
-    partial class AddedCreatedAtField
+    [Migration("20260106145141_AnotherOne")]
+    partial class AnotherOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,8 +38,8 @@ namespace monkee_forms_v2.Migrations
                     b.Property<int>("UserID")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Wpm")
-                        .HasColumnType("INTEGER");
+                    b.Property<float>("Wpm")
+                        .HasColumnType("REAL");
 
                     b.HasKey("ID");
 
@@ -74,14 +74,14 @@ namespace monkee_forms_v2.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<float>("AvgAcc")
+                    b.Property<float>("AvgAcc_Last10Runs")
                         .HasColumnType("REAL");
 
-                    b.Property<int>("AvgWpm")
-                        .HasColumnType("INTEGER");
+                    b.Property<float>("AvgWpm_Last10Runs")
+                        .HasColumnType("REAL");
 
-                    b.Property<int>("BestWpm")
-                        .HasColumnType("INTEGER");
+                    b.Property<float>("BestWpm")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("CompletedRuns")
                         .HasColumnType("INTEGER");

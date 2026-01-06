@@ -5,25 +5,24 @@
 namespace monkee_forms_v2.Migrations
 {
     /// <inheritdoc />
-    public partial class ForgotName : Migration
+    public partial class TypoFix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Name",
+            migrationBuilder.RenameColumn(
+                name: "AvgAccLast10Runs",
                 table: "Users",
-                type: "TEXT",
-                nullable: false,
-                defaultValue: "");
+                newName: "AvgAcc_Last10Runs");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Name",
-                table: "Users");
+            migrationBuilder.RenameColumn(
+                name: "AvgAcc_Last10Runs",
+                table: "Users",
+                newName: "AvgAccLast10Runs");
         }
     }
 }

@@ -28,7 +28,7 @@ namespace monkee_forms_v2.Api.TypeRacerApi
         public int max_skill { get; set; }
         public int min_skill { get; set; }
         public string text { get; set; }
-        public int id { get; set; }
+        public int tid { get; set; }
         public string title { get; set; }
         public string type { get; set; }
     }

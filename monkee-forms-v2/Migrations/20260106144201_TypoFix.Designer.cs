@@ -11,8 +11,8 @@ using monkee_forms_v2.Data;
 namespace monkee_forms_v2.Migrations
 {
     [DbContext(typeof(MonkeeFormsDbContext))]
-    [Migration("20260102150900_OtherTables")]
-    partial class OtherTables
+    [Migration("20260106144201_TypoFix")]
+    partial class TypoFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,10 +74,10 @@ namespace monkee_forms_v2.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<float>("AvgAcc")
+                    b.Property<float>("AvgAcc_Last10Runs")
                         .HasColumnType("REAL");
 
-                    b.Property<int>("AvgWpm")
+                    b.Property<int>("AvgWpm_Last10Runs")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("BestWpm")
@@ -85,6 +85,13 @@ namespace monkee_forms_v2.Migrations
 
                     b.Property<int>("CompletedRuns")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("ID");
 

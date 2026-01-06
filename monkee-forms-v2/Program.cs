@@ -16,7 +16,7 @@ namespace monkee_forms_v2
             var httpClient = new HttpClient();
             var apiClient = new TypeRacerApi(httpClient);
 
-            using var db = MonkeeFormsDbContext.Create();
+            using var db = MonkeeFormsDbContextFactory.Create();
             db.Database.EnsureCreated();
 
             Application.Run(new Form1(apiClient)); 

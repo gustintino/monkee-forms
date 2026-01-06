@@ -12,7 +12,7 @@ namespace monkee_forms_v2.Models
         public int UserID { get; set; }
         public DateTime CompletedAt { get; set; }
         public int TextID { get; set; }
-        public int Wpm { get; set; }
+        public float Wpm { get; set; }
         public float Accuracy { get; set; }
     }
 }

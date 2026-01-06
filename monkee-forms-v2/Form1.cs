@@ -1,4 +1,5 @@
-﻿using monkee_forms_v2.Api.TypeRacerApi;
+﻿using Microsoft.EntityFrameworkCore;
+using monkee_forms_v2.Api.TypeRacerApi;
 using monkee_forms_v2.Data;
 using monkee_forms_v2.Models;
 using System;
@@ -36,7 +37,10 @@ namespace monkee_forms_v2
         private int _correctCharsTyped;
         private int _wrongCharsTyped;
         private int _index = 0;
-        private string _referenceText = "";
+        private Text _referenceText = new();
+
+        private BindingList<User> _userList = null!;
+        private User _currentUser = null!;
 
         public Form1(TypeRacerApi api)
         {
@@ -47,7 +51,7 @@ namespace monkee_forms_v2
             HandleEvents();
         }
 
-        private void InitialSetup()
+        private async void InitialSetup()
         {
             _referenceBox = new RichTextBox();
             mainPanel.Controls.Add(_referenceBox);
@@ -67,9 +71,16 @@ namespace monkee_forms_v2
             _inputBox.Size = new Size(1, 1);
             _inputBox.Location = new Point(-200, -200);
 
-            userSelect.Items.Add("Create new user...");
+            using var db = MonkeeFormsDbContextFactory.Create();
 
+            List<User> dbItems = await db.Users.AsNoTracking().OrderBy(u => u.Name).ToListAsync();
+            _userList = new BindingList<User>(dbItems);
+            
 
+            userSelect.DataSource = _userList;
+            _userList.Add(new User { ID = -1, Name = "Create new user..."});
+            userSelect.DisplayMember = "Name";
+            userSelect.ValueMember = "ID";
         }
 
 
@@ -111,7 +122,7 @@ namespace monkee_forms_v2
             HighlightClear();
 
             _referenceBox.Select(_index, 1);
-            if (e.KeyChar == _referenceText[_index])
+            if (e.KeyChar == _referenceText.TextContent[_index])
             {
                 _referenceBox.SelectionColor = Color.Green;
                 _referenceBox.SelectionBackColor = mainPanel.BackColor;
@@ -176,79 +187,114 @@ namespace monkee_forms_v2
         // called when clicking on the button
         private async void StartNewRound(object sender, EventArgs e)
         {
-            var httpResponse = await _api.GetTextAsync();
-            _referenceText = JsonSerializer.Deserialize<TextResponse>(httpResponse)!.data.text;
+            if (textIdInput.Text == string.Empty)
+            {
+                // this should get a random text from the db, just calls default for now
+                _referenceText = await _api.GetTextAsync();
+            }
+            else
+            {
+                try
+                {
+                    _referenceText = await _api.GetTextAsync(Int32.Parse(textIdInput.Text));
+                } 
+                catch
+                {
+                    MessageBox.Show("Id should be numbers only.");
+                    textIdInput.Text = ""; 
+                    return;
+                }
+            }
 
-            _referenceBox.Text = _referenceText;
+            _referenceBox.Text = _referenceText.TextContent;
+            textIdInput.Text = ""; 
             _index = 0;
             _correctCharsTyped = 0;
             _wrongCharsTyped = 0;
             HighlightChar();
             _inputBox.Enabled = true;
-            _inputBox.Focus();
+            _inputBox.Focus(); 
         }
 
-        private void EndRound()
+        private async void EndRound()
         {
             _inputBox.Enabled = false;
             _endTime = DateTime.Now;
 
-            float acc = ((float)_correctCharsTyped / (_correctCharsTyped + _wrongCharsTyped));
+            var acc = ((float)_correctCharsTyped / (_correctCharsTyped + _wrongCharsTyped));
             var length = _endTime - _startTime;
             var rawWpm = _referenceText.Length / length.TotalMinutes / 5;
             var wpm = rawWpm * acc;
+ 
+            using var db = MonkeeFormsDbContextFactory.Create();
 
-
-
-            //using var db = MonkeeFormsDbContext.Create();
             var run = new Run
             {
                 Accuracy = acc * 100,
-                Wpm = Convert.ToInt32(wpm),
+                Wpm = (float)wpm,
                 CompletedAt = _startTime,
+                UserID = _currentUser.ID,
+                TextID = _referenceText.ID 
             };
+            var currentuser = await db.Users.SingleAsync(u => u.ID == _currentUser.ID);
+            currentuser.CompletedRuns++;
+            currentuser.BestWpm = (wpm > currentuser.BestWpm) ? (float)wpm : currentuser.BestWpm;
+            var last10wpm = await db.Runs
+                .Where(r => r.UserID == currentuser.ID)
+                .OrderByDescending(r => r.CompletedAt)
+                .Select(r => r.Wpm)
+                .Take(10)
+                .ToListAsync();
+            currentuser.AvgWpm_Last10Runs = (float)last10wpm.Average();
+            var last10acc = await db.Runs
+                .Where(r => r.UserID == currentuser.ID)
+                .OrderByDescending(r => r.CompletedAt)
+                .Select(r => r.Accuracy)
+                .Take(10)
+                .ToListAsync();
+            currentuser.AvgAcc_Last10Runs = (float)last10acc.Average();
 
+            db.Add<Run>(run);
+            await db.SaveChangesAsync(); 
         }
 
         private async void userSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(userSelect.SelectedItem?.ToString() == "Create new user...")
+            if(userSelect.SelectedValue is int id && id == -1)
             {
                 using var modal = new CreateNewUserForm();
                 if(modal.ShowDialog() == DialogResult.OK)
                 {
-                    var newItem = modal.NewName;
-                    userSelect.Items.Insert(0, newItem);
-                    userSelect.SelectedItem = newItem;
+                    var newName = modal.NewName;
 
                     var newUser = new User
                     {
-                        Name = newItem,
+                        Name = newName,
                         CreatedAt = DateTime.Now
                     };
-                    await AddUser(newUser);
+                    _userList.Insert(_userList.Count - 1, newUser);
+                    userSelect.SelectedItem = newUser;
+                    await AddUserAsync(newUser);
                 }
             }
+            else
+            {
+                _currentUser = (User)userSelect.SelectedItem; 
+            }
         }
-        private async Task AddUser(User newUser)
+        private async Task AddUserAsync(User newUser)
         {
-            using var db = MonkeeFormsDbContext.Create();
+            using var db = MonkeeFormsDbContextFactory.Create();
             db.Add<User>(newUser);
             await db.SaveChangesAsync();
         }
 
         private async void AddRun(Run newRun)
         {
-            using var db = MonkeeFormsDbContext.Create();
+            using var db = MonkeeFormsDbContextFactory.Create();
             db.Add<Run>(newRun);
             await db.SaveChangesAsync();
         }
 
-        private async void AddText(Text newText)
-        {
-            using var db = MonkeeFormsDbContext.Create();
-            db.Add<Text>(newText);
-            await db.SaveChangesAsync();
-        }
     }
 }
