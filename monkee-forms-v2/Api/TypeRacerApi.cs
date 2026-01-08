@@ -82,7 +82,8 @@ namespace monkee_forms_v2.Api.TypeRacerApi
                     ID = newText.data.tid,
                     TextContent = newText.data.text,
                     Title = newText.data.title,
-                    Length = newText.data.length 
+                    Length = newText.data.length,
+                    Type = newText.data.type
                 }; 
 
                 db.Add<Text>(tempText);

@@ -12,5 +12,6 @@ namespace monkee_forms_v2.Models
         public string Title { get; set; } = string.Empty;
         public int Length { get; set; }
         public string TextContent { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
     }
 }

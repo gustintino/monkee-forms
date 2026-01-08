@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using monkee_forms_v2.Api.TypeRacerApi;
 using monkee_forms_v2.Data;
+using monkee_forms_v2.Grid_data;
 using monkee_forms_v2.Models;
 using System;
 using System.Collections.Generic;
@@ -75,12 +76,15 @@ namespace monkee_forms_v2
 
             List<User> dbItems = await db.Users.AsNoTracking().OrderBy(u => u.Name).ToListAsync();
             _userList = new BindingList<User>(dbItems);
-            
+
 
             userSelect.DataSource = _userList;
-            _userList.Add(new User { ID = -1, Name = "Create new user..."});
+            _userList.Add(new User { ID = -1, Name = "Create new user..." });
             userSelect.DisplayMember = "Name";
             userSelect.ValueMember = "ID";
+
+            UpdateGrids();
+            
         }
 
 
@@ -190,34 +194,44 @@ namespace monkee_forms_v2
             if (textIdInput.Text == string.Empty)
             {
                 // this should get a random text from the db, just calls default for now
-                _referenceText = await _api.GetTextAsync();
+                //_referenceText = await _api.GetTextAsync();
+                using var db = MonkeeFormsDbContextFactory.Create();
+                var randomText = await db.Texts.OrderBy(x => EF.Functions.Random()).FirstOrDefaultAsync();
+                _referenceText = randomText;
+
             }
             else
             {
                 try
                 {
                     _referenceText = await _api.GetTextAsync(Int32.Parse(textIdInput.Text));
-                } 
+                }
                 catch
                 {
                     MessageBox.Show("Id should be numbers only.");
-                    textIdInput.Text = ""; 
+                    textIdInput.Text = "";
                     return;
                 }
             }
 
             _referenceBox.Text = _referenceText.TextContent;
-            textIdInput.Text = ""; 
+            textIdInput.Text = "";
             _index = 0;
             _correctCharsTyped = 0;
             _wrongCharsTyped = 0;
             HighlightChar();
             _inputBox.Enabled = true;
-            _inputBox.Focus(); 
+            _inputBox.Focus();
+            typeTxt.Text = $"({_referenceText.Type.ToString()})";
+            titleTxt.Text = _referenceText.Title.ToString();
+            UpdateGrids();
+            accTxt.Text = "";
+            wpmTxt.Text = "";
         }
 
         private async void EndRound()
         {
+            _startedTyping = false;
             _inputBox.Enabled = false;
             _endTime = DateTime.Now;
 
@@ -225,7 +239,7 @@ namespace monkee_forms_v2
             var length = _endTime - _startTime;
             var rawWpm = _referenceText.Length / length.TotalMinutes / 5;
             var wpm = rawWpm * acc;
- 
+
             using var db = MonkeeFormsDbContextFactory.Create();
 
             var run = new Run
@@ -234,8 +248,11 @@ namespace monkee_forms_v2
                 Wpm = (float)wpm,
                 CompletedAt = _startTime,
                 UserID = _currentUser.ID,
-                TextID = _referenceText.ID 
+                TextID = _referenceText.ID
             };
+            db.Add<Run>(run);
+            await db.SaveChangesAsync();
+
             var currentuser = await db.Users.SingleAsync(u => u.ID == _currentUser.ID);
             currentuser.CompletedRuns++;
             currentuser.BestWpm = (wpm > currentuser.BestWpm) ? (float)wpm : currentuser.BestWpm;
@@ -245,25 +262,32 @@ namespace monkee_forms_v2
                 .Select(r => r.Wpm)
                 .Take(10)
                 .ToListAsync();
-            currentuser.AvgWpm_Last10Runs = (float)last10wpm.Average();
+            currentuser.AvgWpm_Last10Runs = (last10wpm.Any()) ? (float)last10wpm.Average() : 0f;
             var last10acc = await db.Runs
                 .Where(r => r.UserID == currentuser.ID)
                 .OrderByDescending(r => r.CompletedAt)
                 .Select(r => r.Accuracy)
                 .Take(10)
                 .ToListAsync();
-            currentuser.AvgAcc_Last10Runs = (float)last10acc.Average();
+            currentuser.AvgAcc_Last10Runs = (last10acc.Any()) ? (float)last10acc.Average() : 0f;
 
-            db.Add<Run>(run);
-            await db.SaveChangesAsync(); 
+            //?? bro
+            _currentUser = currentuser;
+
+            await db.SaveChangesAsync();
+
+            UpdateUIDynamic();
+            accTxt.Text = $"{Math.Round(run.Accuracy, 2)}%";
+            wpmTxt.Text = $"{Math.Round(run.Wpm, 2)}wpm";
+            UpdateGrids();
         }
 
         private async void userSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(userSelect.SelectedValue is int id && id == -1)
+            if (userSelect.SelectedValue is int id && id == -1)
             {
                 using var modal = new CreateNewUserForm();
-                if(modal.ShowDialog() == DialogResult.OK)
+                if (modal.ShowDialog() == DialogResult.OK)
                 {
                     var newName = modal.NewName;
 
@@ -279,8 +303,11 @@ namespace monkee_forms_v2
             }
             else
             {
-                _currentUser = (User)userSelect.SelectedItem; 
+                _currentUser = (User)userSelect.SelectedItem;
             }
+            UpdateUIStatic();
+            UpdateUIDynamic();
+            UpdateGrids();
         }
         private async Task AddUserAsync(User newUser)
         {
@@ -289,6 +316,7 @@ namespace monkee_forms_v2
             await db.SaveChangesAsync();
         }
 
+        //fill this out dumbass
         private async void AddRun(Run newRun)
         {
             using var db = MonkeeFormsDbContextFactory.Create();
@@ -296,5 +324,96 @@ namespace monkee_forms_v2
             await db.SaveChangesAsync();
         }
 
+        private void UpdateUIStatic()
+        {
+            userIdTxt.Text = _currentUser.ID.ToString();
+            CreationTimeTxt.Text = _currentUser.CreatedAt.ToString();
+        }
+
+        private void UpdateUIDynamic()
+        {
+            BestWPMTxt.Text = Math.Round(_currentUser.BestWpm, 2).ToString();
+            AvgAccTxt.Text = Math.Round(_currentUser.AvgAcc_Last10Runs, 2).ToString();
+            AvgWPMTxt.Text = Math.Round(_currentUser.AvgWpm_Last10Runs, 2).ToString();
+            RacesDoneTxt.Text = _currentUser.CompletedRuns.ToString();
+        }
+
+        private void UpdateGrids()
+        {
+            using var db = MonkeeFormsDbContextFactory.Create();
+
+            var overallRows =
+                (from run in db.Runs.AsNoTracking()
+                 join user in db.Users.AsNoTracking() on run.UserID equals user.ID
+                 orderby run.Wpm descending
+                 select new
+                 {
+                     Name = user.Name,
+                     Wpm = run.Wpm,
+                     Accuracy = run.Accuracy
+
+                 })
+                 .Take(5)
+                 .AsEnumerable()
+                 .Select((entry, index) => new LeaderboardRow
+                 {
+                     Rank = index + 1,
+                     Name = entry.Name,
+                     Wpm = (float)Math.Round(entry.Wpm, 2),
+                     Accuracy = (float)Math.Round(entry.Accuracy, 2)
+                 })
+                 .ToList();
+
+            var userRows = db.Runs
+                .AsNoTracking()
+                .Where(r => r.UserID == _currentUser.ID)
+                .OrderByDescending(r => r.Wpm)
+                .Take(5)
+                .AsEnumerable()
+                .Select((run, index) => new LeaderboardRow
+                {
+                    Rank = index + 1,
+                    Name = _currentUser.Name,
+                    Wpm = (float)Math.Round(run.Wpm, 2),
+                    Accuracy = (float)Math.Round(run.Accuracy, 2),
+                }).ToList();
+
+            var textsRows =
+                (from run in db.Runs.AsNoTracking()
+                 join user in db.Users.AsNoTracking() on run.UserID equals user.ID
+                 where run.TextID == _referenceText.ID
+                 orderby run.Wpm descending
+                 select new
+                 {
+                     Name = user.Name,
+                     Wpm = run.Wpm,
+                     Accuracy = run.Accuracy
+                 })
+                 .Take(5)
+                 .AsEnumerable()
+                 .Select((entry, index) => new LeaderboardRow
+                 {
+                     Rank = index + 1,
+                     Name = entry.Name,
+                     Wpm = (float)Math.Round(entry.Wpm, 2),
+                     Accuracy = (float)Math.Round(entry.Accuracy, 2),
+                 }).ToList();
+
+            overallGrid.DataSource = overallRows;
+            perUserGrid.DataSource = userRows;
+            perTextGrid.DataSource = textsRows;
+
+            overallGrid.Columns[nameof(LeaderboardRow.Rank)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            overallGrid.Columns[nameof(LeaderboardRow.Rank)].FillWeight = 30;
+            overallGrid.Columns[nameof(LeaderboardRow.Rank)].HeaderText = "#";
+
+            perUserGrid.Columns[nameof(LeaderboardRow.Rank)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            perUserGrid.Columns[nameof(LeaderboardRow.Rank)].FillWeight = 30;
+            perUserGrid.Columns[nameof(LeaderboardRow.Rank)].HeaderText = "#";
+
+            perTextGrid.Columns[nameof(LeaderboardRow.Rank)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            perTextGrid.Columns[nameof(LeaderboardRow.Rank)].FillWeight = 30;
+            perTextGrid.Columns[nameof(LeaderboardRow.Rank)].HeaderText = "#";
+        }
     }
 }

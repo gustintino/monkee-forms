@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\sqlite3.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.22">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
