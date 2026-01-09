@@ -31,11 +31,18 @@ namespace monkee_forms_v2.Api.TypeRacerApi
 
             // hate this but whatever
             // maybe load into config or whatever the fuck
-            var json = File.ReadAllText("../../../appsettings.json");
-            var apiKey = JsonSerializer.Deserialize<Config>(json)!.ApiKey;
+            try
+            {
+                var json = File.ReadAllText("../../../appsettings.json");
+                var apiKey = JsonSerializer.Deserialize<Config>(json)!.ApiKey;
 
-            var header = Base64Encode(apiKey);
-            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", header);
+                var header = Base64Encode(apiKey);
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", header); 
+            }
+            catch
+            {
+                MessageBox.Show("Trouble getting api key.");
+            }
         }
 
         // a default query for testing purposes, should not be actually used

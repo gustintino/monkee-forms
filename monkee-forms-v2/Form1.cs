@@ -19,16 +19,10 @@ namespace monkee_forms_v2
     public partial class Form1 : Form
     {
         // TODO:
-        // - handle index out of range --> i think i did it? need to doublecheck
-        // - get some texts and/or ids in cache 
-        // - sqlite everyting (scores + timestamp + wpm, users + total races + avg wpm, texts + ids) and connect everything
-        // - add ui and logic for wpm
-        // - username input
-        // - add accuracy and logic for it
+        // - handle index out of range --> it's fine 99.9% of the time, not sure what causes it
 
         private readonly TypeRacerApi _api;
 
-        // ELEMENTS
         private RichTextBox _referenceBox;
         private TextBox _inputBox; // for actually capturing the input from user 
 
@@ -83,14 +77,11 @@ namespace monkee_forms_v2
             userSelect.DisplayMember = "Name";
             userSelect.ValueMember = "ID";
 
-            UpdateGrids();
-            
+            UpdateGrids(); 
         }
 
 
-        // the inputbox is not on screen, and is therefore not clickable, so focus should be manual. 
-        // maybe i'll wanna do it some other way? dunno yet
-        // if i'm doing it like this, i'll need to add any other elements as well
+        // the inputbox is not on screen, and is therefore not clickable, so focus should be manual 
         private void HandleEvents()
         {
             this.Click += (_, __) => _inputBox.Focus();
@@ -167,7 +158,6 @@ namespace monkee_forms_v2
 
         private void InputBox_KeyDown(object sender, KeyEventArgs e)
         {
-            // add ctrl + backspace support? like a normal person?
             if (e.KeyCode == Keys.Back)
             {
                 if (_index > 0)
@@ -269,14 +259,13 @@ namespace monkee_forms_v2
                 .Select(r => r.Accuracy)
                 .Take(10)
                 .ToListAsync();
-            currentuser.AvgAcc_Last10Runs = (last10acc.Any()) ? (float)last10acc.Average() : 0f;
-
-            //?? bro
+            currentuser.AvgAcc_Last10Runs = (last10acc.Any()) ? (float)last10acc.Average() : 0f; 
             _currentUser = currentuser;
 
             await db.SaveChangesAsync();
 
-            UpdateUIDynamic();
+            UpdateUIDynamic(); 
+            // i need the run info
             accTxt.Text = $"{Math.Round(run.Accuracy, 2)}%";
             wpmTxt.Text = $"{Math.Round(run.Wpm, 2)}wpm";
             UpdateGrids();
@@ -315,15 +304,7 @@ namespace monkee_forms_v2
             db.Add<User>(newUser);
             await db.SaveChangesAsync();
         }
-
-        //fill this out dumbass
-        private async void AddRun(Run newRun)
-        {
-            using var db = MonkeeFormsDbContextFactory.Create();
-            db.Add<Run>(newRun);
-            await db.SaveChangesAsync();
-        }
-
+ 
         private void UpdateUIStatic()
         {
             userIdTxt.Text = _currentUser.ID.ToString();
